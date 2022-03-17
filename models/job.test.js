@@ -53,6 +53,7 @@ describe("findAll", function () {
     title: "testNewJob",
     salary: 10000,
     equity: "0.04",
+    handle: "c2",
     companyHandle: "c2",
     companyName: "C2",
   };
@@ -66,8 +67,7 @@ describe("findAll", function () {
         title: "testNewJob",
         salary: 10000,
         equity: "0.04",
-        companyHandle: "c2",
-        companyName: "C2",
+        handle: "c2"
       }
     ]);
   });
@@ -140,7 +140,7 @@ describe("update", function () {
       await Job.update(1, updateData);
       fail();
     } catch (err) {
-      expect(err instanceof NotFoundError).toBeFalsy();
+      expect(err instanceof NotFoundError).toBeTruthy();
     }
   });
 

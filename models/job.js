@@ -42,7 +42,7 @@ class Job {
   /** Find all jobs.
    * When filters are sent, then go through the keys 
    * and create a string for the where clause
-   * Returns [{ id, title, salary, equity, company_handle }, ...]
+   * Returns [{ id, title, salary, equity, company_handle }, ...] !!!!!!!!
   */
 
   static async findAll(filters = {}) {
@@ -91,8 +91,21 @@ class Job {
               else {
                   parameters += filteringArray[0];
               }
+        }
+              const querySql = `SELECT id,
+                                       title,
+                                       salary,
+                                       equity,
+                                       company_handle AS "handle"
+                                       FROM jobs
+                                      ${parameters} 
+                                       ORDER BY title`;
+                                       
+              //make query to DB and return results
+              const jobsRes = await db.query(querySql, filteringValue);
+              return jobsRes.rows;
   
-          }}
+}
 
   /** Given a job id, return data about the job
    * Returns [{ id, title, salary, equity, companyHandle, company }]
@@ -147,12 +160,12 @@ class Job {
 
     const querySql = `UPDATE jobs 
                       SET ${setCols} 
-                      WHERE handle = ${idVarIdx} 
+                      WHERE id = ${idVarIdx} 
                       RETURNING id, 
                                 title, 
                                 salary, 
                                 equity,
-                                company_handle AS "companyHandle"`;
+                                company_handle AS "companyHandle"`
     const result = await db.query(querySql, [...values, id]);
     const job = result.rows[0];
 
