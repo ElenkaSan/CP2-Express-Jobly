@@ -11,7 +11,6 @@ const {
   commonAfterEach,
   commonAfterAll,
   u1Token,
-  u2Token,
   testJobIds,
   adminToken,
 } = require("./_testCommon");
@@ -28,7 +27,7 @@ describe("POST /jobs", function () {
         title: "jobTest",
         salary: 100000,
         equity: 0.06,
-        companyHandle: "c1",
+        company_handle: "c1",
         equity: "0.2"
     };
 
@@ -47,7 +46,7 @@ describe("POST /jobs", function () {
             .set("authorization", `Bearer ${adminToken}`);
         expect(resp.statusCode).toEqual(201);
         expect(resp.body).toEqual({
-            job: newJob,
+            job: newJob
           });
     });
 
@@ -58,7 +57,7 @@ describe("POST /jobs", function () {
                 salary: 100000
             })
             .set("authorization", `Bearer ${adminToken}`);
-        expect(resp.statusCode).toEqual(401);
+        expect(resp.statusCode).toEqual(400);
     });
 
     test("bad request with invalid data", async function () {
@@ -69,7 +68,7 @@ describe("POST /jobs", function () {
                 salary: "22"
             })
             .set("authorization", `Bearer ${adminToken}`);
-        expect(resp.statusCode).toEqual(401);
+        expect(resp.statusCode).toEqual(400);
     });
 });
 
@@ -121,10 +120,9 @@ describe("GET /jobs", function () {
 
 describe("GET /jobs/:id", function () {
     test("works for anon", async function () {
-        const jobs = await db.query(`SELECT * FROM jobs`);
-        const resp = await request(app).get(`/jobs/${jobs.testJobIds}`)
+        const resp = await request(app).get(`/jobs/${testJobIds[1]}`)
         const { job } = resp.body;
-        expect(job).toHaveProperty("title", `${jobs.testJobIds}`);
+        expect(job).toHaveProperty("title", "testJob2");
     });
 
     test("not found for no such job", async function () {
@@ -136,32 +134,34 @@ describe("GET /jobs/:id", function () {
 /************************************** PATCH /jobs/:id */
 
 describe("PATCH /jobs/:id", function () {
-    test("works for admins", async function () {
-        const jobs = await db.query(`SELECT * FROM jobs`);
+    test("good for admins", async function () {
         const resp = await request(app)
-            .patch(`/jobs/${jobs.row[0].id}`)
+            .patch(`/jobs/${testJobIds[0]}`)
             .send({ title: "Updated job title" })
             .set("authorization", `Bearer ${adminToken}`);
-        expect(resp.body.job).toEqual({
-            job: {
-              id: expect.any(Number),
-              title: "Updated job title"
+        expect(resp.body).toEqual({
+            job:
+             {
+              id: testJobIds[0],
+              title: "Updated job title",
+              companyHandle: "c1",
+              equity: "0.1",
+              salary: 1,
             },
         });
+        expect(resp.body).toHaveProperty("title", {jobs: {"companyHandle": "c1", "equity": "0.1", "id": testJobIds[0], "salary": 1, "title": "Updated job title"}});
     }); 
 
     test("unauth for anon", async function () {
-        const jobs = await db.query(`SELECT * FROM jobs`);
         const resp = await request(app)
-            .patch(`/jobs/${jobs.testJobIds}`)
+            .patch(`/jobs/${testJobIds[0]}`)
             .send({ title: "update to job title" });
         expect(resp.statusCode).toEqual(401);
     });
 
     test("unauth for any logged in user that is not an admin", async function () {
-        const jobs = await db.query(`SELECT * FROM jobs`);
         const resp = await request(app)
-            .patch(`/jobs/${jobs.testJobIds}`)
+            .patch(`/jobs/${testJobIds[0]}`)
             .send({ title: "update to job title" })
             .set("authorization", `Bearer ${u1Token}`);
         expect(resp.statusCode).toEqual(401);
@@ -174,22 +174,20 @@ describe("PATCH /jobs/:id", function () {
                 title: "new title",
             })
             .set("authorization", `Bearer ${adminToken}`);
-        expect(resp.statusCode).toEqual(401);
+        expect(resp.statusCode).toEqual(404);
     });
 
     test("bad request on handle change attempt", async function () {
-        const jobs = await db.query(`SELECT * FROM jobs`);
         const resp = await request(app)
-            .patch(`/jobs/${jobs.testJobIds}`)
+            .patch(`/jobs/${testJobIds[0]}`)
             .send({ companyHandle: "c1-new" })
             .set("authorization", `Bearer ${adminToken}`);
-        expect(resp.statusCode).toEqual(401);
+        expect(resp.statusCode).toEqual(400);
     });
 
     test("bad request on invalid data", async function () {
-        const jobs = await db.query(`SELECT * FROM jobs`);
         const resp = await request(app)
-            .patch(`/jobs/${jobs.testJobIds}`)
+            .patch(`/jobs/${testJobIds[0]}`)
             .send({ equity: 0.80 })
             .set("authorization", `Bearer ${adminToken}`);
         expect(resp.statusCode).toEqual(400);
@@ -200,11 +198,10 @@ describe("PATCH /jobs/:id", function () {
 
 describe("DELETE /jobs/:id", function () {
     test("works for admin", async function () {
-        const jobs = await db.query(`SELECT * FROM jobs`);
         const resp = await request(app)
-          .delete(`/jobs/${jobs.rows[0]}`)
+          .delete(`/jobs/${testJobIds[0]}`)
           .set("authorization", `Bearer ${adminToken}`);
-        expect(resp.body).toEqual({"error": {"message": "Unauthorized", "status": 401}});
+        expect(resp.body).toEqual({deleted: `${testJobIds[0]}` });
     });
   
     test("unauth for others", async function () {

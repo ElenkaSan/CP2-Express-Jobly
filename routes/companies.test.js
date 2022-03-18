@@ -12,7 +12,6 @@ const {
   commonAfterAll,
   testJobIds,
   u1Token,
-  u2Token,
   adminToken,
 } = require("./_testCommon");
 
@@ -69,33 +68,25 @@ describe("POST /companies", function () {
 /************************************** GET /companies */
 
 describe("GET /companies", function () {
-  test("ok for anon", async function () {
+  test("good for anon", async function () {
     const resp = await request(app).get("/companies");
     expect(resp.body).toEqual({
-      companies:
-          [
-            {
-              handle: "c1",
-              name: "C1",
-              description: "Desc1",
-              numEmployees: 1,
-              logoUrl: "http://c1.img",
-            },
-            {
-              handle: "c2",
-              name: "C2",
-              description: "Desc2",
-              numEmployees: 2,
-              logoUrl: "http://c2.img",
-            },
-            {
-              handle: "c3",
-              name: "C3",
-              description: "Desc3",
-              numEmployees: 3,
-              logoUrl: "http://c3.img",
-            },
-          ],
+      companies: [
+        {
+          handle: "c1",
+          name: "C1",
+          description: "Desc1",
+          numEmployees: 1,
+          logoUrl: "http://c1.img",
+        },
+        {
+          handle: "c2",
+          name: "C2",
+          description: "Desc2",
+          numEmployees: 2,
+          logoUrl: "http://c2.img",
+        },
+      ],
     });
   });
 
@@ -130,7 +121,21 @@ describe("GET /companies/:handle", function () {
         description: "Desc1",
         numEmployees: 1,
         logoUrl: "http://c1.img",
-        jobs: [ ]
+        jobs: [ 
+                   { 
+                     "equity": "0.1",
+                     "id": testJobIds[0],
+                     "salary": 1,
+                     "title": "testJob1",
+                   },
+                   {
+                     "equity": "0.2",
+                     "id": testJobIds[1],
+                     "salary": 2,
+                     "title": "testJob2",
+                   },
+        
+        ]
       },
     });
   });
@@ -191,7 +196,7 @@ describe("PATCH /companies/:handle", function () {
         .send({
           name: "new nope",
         })
-        .set("authorization", `Bearer ${u1Token}`);
+        .set("authorization", `Bearer ${adminToken}`);
     expect(resp.statusCode).toEqual(404);
   });
 
@@ -222,8 +227,8 @@ describe("DELETE /companies/:handle", function () {
   test("works for users", async function () {
     const resp = await request(app)
         .delete(`/companies/c1`)
-        .set("authorization", `Bearer ${u1Token}`);
-    expect(resp.body).toEqual({"error": {"message": "Unauthorized", "status": 401}});
+        .set("authorization", `Bearer ${adminToken}`);
+    expect(resp.body).toEqual({deleted: "c1"});
   });
 
   test("unauth for anon", async function () {
@@ -235,7 +240,7 @@ describe("DELETE /companies/:handle", function () {
   test("not found for no such company", async function () {
     const resp = await request(app)
         .delete(`/companies/nope`)
-        .set("authorization", `Bearer ${u1Token}`);
+        .set("authorization", `Bearer ${adminToken}`);
     expect(resp.statusCode).toEqual(404);
   });
 });
