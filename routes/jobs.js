@@ -26,10 +26,9 @@ router.post("/", ensureAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, jobNewSchema);
     if (!validator.valid) {
-      const errs = validator.errors.map(error => error.stack);
+      const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
     }
-
     const job = await Job.create(req.body);
     return res.status(201).json({ job });
   } catch (err) {
@@ -58,7 +57,7 @@ router.get("/", async function (req, res, next) {
       const showErr = validator.errors.map(error => error.stack);
       throw new BadRequestError(showErr, 400);
     }
-    const jobs = await Job.findAll( querystrng);
+    const jobs = await Job.findAll(querystrng);
     return res.json({ jobs });
   } catch (err) {
     return next(err);

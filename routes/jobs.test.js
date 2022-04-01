@@ -31,14 +31,6 @@ describe("POST /jobs", function () {
         equity: "0.2"
     };
 
-    test("not good for users", async function () {
-        const resp = await request(app)
-            .post("/jobs")
-            .send(newJob)
-            .set("authorization", `Bearer ${u1Token}`);
-        expect(resp.statusCode).toEqual(401);
-    });
-
     test("good for admin", async function () {
         const resp = await request(app)
             .post("/jobs")
@@ -48,6 +40,14 @@ describe("POST /jobs", function () {
         expect(resp.body).toEqual({
             job: newJob
           });
+    });
+
+    test("not good for users", async function () {
+        const resp = await request(app)
+            .post("/jobs")
+            .send(newJob)
+            .set("authorization", `Bearer ${u1Token}`);
+        expect(resp.statusCode).toEqual(401);
     });
 
     test("bad request with missing data", async function () {
@@ -76,7 +76,7 @@ describe("POST /jobs", function () {
 
 describe("GET /jobs", function () {
     test("good for anon", async function () {
-        const resp = await request(app).get(`/jobs`);
+        const resp = await request(app).get("/jobs");
         expect(resp.body).toEqual({
 			jobs : [
 				{
@@ -140,7 +140,7 @@ describe("PATCH /jobs/:id", function () {
             .send({ title: "Updated job title" })
             .set("authorization", `Bearer ${adminToken}`);
         expect(resp.body).toEqual({
-            job:
+            jobs:
              {
               id: testJobIds[0],
               title: "Updated job title",
@@ -149,7 +149,7 @@ describe("PATCH /jobs/:id", function () {
               salary: 1,
             },
         });
-        expect(resp.body).toHaveProperty("title", {jobs: {"companyHandle": "c1", "equity": "0.1", "id": testJobIds[0], "salary": 1, "title": "Updated job title"}});
+        expect(resp.body).toHaveProperty('[]', {jobs: {"companyHandle": "c1", "equity": "0.1", "id": testJobIds[0], "salary": 1, "title": "Updated job title"}});
     }); 
 
     test("unauth for anon", async function () {
