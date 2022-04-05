@@ -140,6 +140,14 @@ describe("GET /users", function () {
           email: "user3@user.com",
           isAdmin: false,
         },
+        // {
+        //   email: "admin@admin.com",
+        //   firstName: "Adm",
+        //   isAdmin: true,
+        //   lastName: "ad",
+        //   username: "admin",
+        // },
+      
       ],
     });
   });

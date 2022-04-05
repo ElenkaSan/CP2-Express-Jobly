@@ -45,65 +45,39 @@ class Job {
    * Returns [{ id, title, salary, equity, company_handle }, ...] !!!!!!!!
   */
 
-  static async findAll(filters = {}) {
-      let parameters = "";
+  static async findAll({ minSalary, hasEquity, title } = {}) {
+      let parameters = "WHERE ";
+      const querySql = `SELECT id,
+                               title,
+                               salary,
+                               equity,
+                               company_handle AS "handle"
+                               FROM jobs
+                               ORDER BY title`;
+      let filteringArray = [];
       let filteringValue = [];
-  
-          //determine if we got query filters
-          //if so build the "where clause"
-          //we check for those are expected if an unknown parameter is given we throw an error
-          const keys = Object.keys(filters);
-          if (keys.length > 0) {
-  
-              //start the where clause string
-              parameters = "WHERE ";
-              //used for building the where string
-              let filteringArray = [];
-              //will be used to match inputs with values provided for query string
-              let count = 1;
-  
-  
-              //run through the query parameters given, build strings and push to arrays
-              for (let key of Object.keys(filters)) {
-  
-                  if (key == "title") {
-                      filteringArray.push(`title ILIKE $${count}`);
-                      filteringValue.push(`%${filters[key]}%`);
-                  }
-                  else if (key == "minSalary") {
-                      filteringArray.push(`salary > $${count}`);
-                      filteringValue.push(`${filters[key]}`);
-                  }
-                  else if (key == "hasEquity") {
-                      filteringArray.push(`equity <> 0`);
-                  }
-  
-                  else {
-                      throw new BadRequestError(`Invalid filter: ${key}`);
-                  }//end if.else clauses
-                  count += 1;
-              }//end of for loop for filters object
-  
-              //upon running through all query parameters, create the string by joining
-              if (filteringArray.length > 1) {
-                  parameters += filteringArray.join(" AND ");
-              }
-              else {
-                  parameters += filteringArray[0];
-              }
-        }
-              const querySql = `SELECT id,
-                                       title,
-                                       salary,
-                                       equity,
-                                       company_handle AS "handle"
-                                       FROM jobs
-                                      ${parameters} 
-                                       ORDER BY title`;
-                                       
-              //make query to DB and return results
-              const jobsRes = await db.query(querySql, filteringValue);
-              return jobsRes.rows;
+      //run through the query parameters given, build strings and push to arrays
+      if (title !== undefined) {
+        filteringValue.push(`%${title}%`);
+        filteringArray.push(`title ILIKE $${filteringValue.length}`);
+      }
+      else if (minSalary !== undefined) {
+        filteringValue.push(minSalary);
+        filteringArray.push(`salary >= $${ filteringValue.length}`);
+      }
+      else if (hasEquity === true) {
+        filteringArray.push(`equity > 0`);
+      }
+      //upon running through all query parameters, create the string by joining
+      if (filteringArray.length > 1) {
+          parameters += filteringArray.join(" AND ");
+      }
+      else {
+          parameters += filteringArray[0];
+      } 
+      //make finalizeing query to DB and return results
+      const jobsRes = await db.query(querySql, filteringValue);
+      return jobsRes.rows;
   
 }
 

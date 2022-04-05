@@ -26,9 +26,8 @@ describe("POST /jobs", function () {
     const newJob = {
         title: "jobTest",
         salary: 100000,
-        equity: 0.06,
-        company_handle: "c1",
-        equity: "0.2"
+        equity: "0.06",
+        companyHandle: "c1"
     };
 
     test("good for admin", async function () {
@@ -38,7 +37,13 @@ describe("POST /jobs", function () {
             .set("authorization", `Bearer ${adminToken}`);
         expect(resp.statusCode).toEqual(201);
         expect(resp.body).toEqual({
-            job: newJob
+            job: 		{
+                id: expect.any(Number),
+                title         : "jobTest",
+                salary        : 100000,
+                equity        : "0.06",
+                company_handle : "c1",
+            }
           });
     });
 
@@ -84,24 +89,21 @@ describe("GET /jobs", function () {
 					title         : 'test1',
 					salary        : 100,
 					equity        : '0.1',
-					companyHandle : 'c1',
-					companyName   : 'C1'
+					handle : 'c1',
 				},
 				{
 					id: expect.any(Number),
 					title         : 'test2',
 					salary        : 200,
 					equity        : '0.2',
-					companyHandle : 'c1',
-					companyName   : 'C1'
+					handle : 'c1',
 				},
 				{
 					id: expect.any(Number),
 					title         : 'test3',
 					salary        : 300,
 					equity        : null,
-					companyHandle : 'c1',
-					companyName   : 'C1'
+					handle : 'c1',
 				}
 			]
 		});

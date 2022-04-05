@@ -50,7 +50,7 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
   */
 
-  static async findAll(filters = {}) {
+  static async findAll(filtersMinMax = {}) {
     const mainQuery = `SELECT handle,
                               name,
                               description,
@@ -59,60 +59,38 @@ class Company {
                         FROM companies
                         ORDER BY name`;
 
-    //instatiate variable for Where Clause String
-    let parameters = "";
-    //instatiate the values to send for where clause (prevents sql injection)
+    //used for building the where string                    
+    let filteringArray = [];
     let filteringValue = [];
+    //start the where clause string
+    let parameters = "WHERE";
+    const { minEmployees, maxEmployees, name } = filtersMinMax;
 
-    //determine if we got query filters
-    //if so build the "where clause"
-    //we check for those are expected if an unknown parameter is given we throw an error
-    const keys = Object.keys(filters);
-    if (keys.length > 0) {
-
-      //start the where clause string
-      parameters = "WHERE";
-      //used for building the where string
-      let filteringArray = [];
-      //will be used to match inputs with values provided for query string
-      let count = 1;
-      let checkMinMax = {};
-
-      //run through the query parameters given, build strings and push to arrays
-      for (let key of Object.keys(filters)) {
-
-        if (key == "nameLike") {
-          filteringArray.push(`name ILIKE $${count}`);
-          filteringValue.push(`%${filters[key]}%`);
-        }
-        else if (key == "minEmployees") {
-          filteringArray.push(`num_employees > $${count}`);
-          filteringValue.push(`${filters[key]}`);
-          checkMinMax[key] = filters[key];
-        }
-        else if (key == "maxEmployees") {
-          filteringArray.push(`num_employees < $${count}`);
-          filteringValue.push(`${filters[key]}`);
-          checkMinMax[key] = filters[key];
-        }
-        else {
-          throw new BadRequestError(`Invalid filter: ${key}`);
-        }//end if.else clauses
-        count += 1;
-      }//end of for loop for filters object
-
-      if (((Object.keys(checkMinMax).length) == 2) && (checkMinMax["maxEmployees"] < checkMinMax["minEmployees"])) {
+    //run through the query parameters given, build strings and push to arrays
+    if (name) {
+      filteringValue.push(`%${name}%`);
+      filteringArray.push(`name ILIKE $${filteringValue.length}`);
+    }
+    else if (minEmployees !== undefined) {
+      filteringValue.push(minEmployees);
+      filteringArray.push(`num_employees >= $${filteringValue.length}`);
+    }
+    else if (maxEmployees !== undefined) {
+      filteringValue.push(maxEmployees);
+      filteringArray.push(`num_employees <= $${filteringValue.length}`);
+    }
+    
+    if (minEmployees > maxEmployees) {
         throw new BadRequestError(`Invalid Min and Max Values provided in query`);
       }
       //upon running through all query parameters, create the string by joining
-      if (filteringArray.length > 1) {
+    if (filteringArray.length > 1) {
         parameters += filteringArray.join(" AND ");
       }
-      else {
+    else {
         parameters += filteringArray[0];
       }
 
-    }
     const companiesRes = await db.query(mainQuery, filteringValue);
     return companiesRes.rows;
   };

@@ -69,6 +69,15 @@ async function commonBeforeAll() {
     isAdmin: false,
   });
 
+  // await User.register({
+  //   username: "admin",
+  //   firstName: "Adm",
+  //   lastName: "ad",
+  //   email: "admin@admin.com",
+  //   password: "password4",
+  //   isAdmin: true,
+  // });
+
 }
 
 async function commonBeforeEach() {
